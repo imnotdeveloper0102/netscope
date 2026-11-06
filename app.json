@@ -1,0 +1,1 @@
+{"expo":{"android":{"adaptiveIcon":{"backgroundColor":"#0B1220","foregroundImage":"./assets/icon.png"},"package":"com.netscope.app","versionCode":1},"icon":"./assets/icon.png","name":"NetScope","orientation":"portrait","plugins":["./plugins/with-netscope-native"],"scheme":"netscope","slug":"netscope","userInterfaceStyle":"dark","version":"0.1.0"}}

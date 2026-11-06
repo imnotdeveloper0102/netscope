@@ -1,0 +1,1 @@
+{"compilerOptions":{"esModuleInterop":true,"exactOptionalPropertyTypes":false,"jsx":"react-jsx","moduleResolution":"bundler","noUncheckedIndexedAccess":true,"skipLibCheck":true,"strict":true},"exclude":["node_modules","plugins"],"extends":"@react-native/typescript-config","include":["App.tsx","__tests__","index.js","src"]}
