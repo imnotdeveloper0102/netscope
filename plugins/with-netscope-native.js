@@ -30,8 +30,14 @@ const withNativeFiles = (config) =>
     async (config) => {
       const androidRoot = config.modRequest.platformProjectRoot;
       const srcRoot = path.join(ASSETS_DIR, PACKAGE_DIR);
+      // Fail nhanh, fail rõ: nếu thiếu thư mục nguồn thì prebuild phải
+      // dừng ngay tại đây, không được im lặng bỏ qua rồi để
+      // MainApplication chèn import NetScopePackage mà file không có
+      // (lỗi đó chỉ lộ ra sau ~20 phút ở bước Run gradlew trên EAS).
       if (!fs.existsSync(srcRoot)) {
-        return config;
+        throw new Error(
+          `[with-netscope-native] missing Kotlin source dir: ${srcRoot}`,
+        );
       }
       const copyRecursive = (srcDir, destDir) => {
         fs.mkdirSync(destDir, { recursive: true });
@@ -53,6 +59,27 @@ const withNativeFiles = (config) =>
       const testSrc = path.join(ASSETS_DIR, 'app', 'src', 'test', 'java', 'com', 'netscope', 'scanner');
       if (fs.existsSync(testSrc)) {
         copyRecursive(testSrc, path.join(androidRoot, 'app', 'src', 'test', 'java', 'com', 'netscope', 'scanner'));
+      }
+      // Kiểm chứng ngay sau khi copy: package phải có mặt thì
+      // MainApplication mới được chèn import ở bước sau.
+      const destRoot = path.join(androidRoot, PACKAGE_DIR);
+      const countKt = (dir) => {
+        let n = 0;
+        for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+          const p = path.join(dir, entry.name);
+          if (entry.isDirectory()) n += countKt(p);
+          else if (entry.name.endsWith('.kt')) n += 1;
+        }
+        return n;
+      };
+      const packageFile = path.join(destRoot, 'bridge', 'NetScopePackage.kt');
+      const ktCount = fs.existsSync(destRoot) ? countKt(destRoot) : 0;
+      if (!fs.existsSync(packageFile) || ktCount < 20) {
+        throw new Error(
+          `[with-netscope-native] Kotlin copy incomplete: ` +
+            `NetScopePackage.kt=${fs.existsSync(packageFile)}, ` +
+            `.kt files=${ktCount} (expected >= 20) under ${destRoot}`,
+        );
       }
       return config;
     },
